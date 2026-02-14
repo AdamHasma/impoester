@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-// UI Komponenten von shadcn
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,109 +17,104 @@ export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const navigate = useNavigate();
 
-  // Funktion 1: Einen neuen Raum erstellen
   const handleCreateRoom = async () => {
     if (!playerName.trim()) return alert("Bitte gib einen Namen ein!");
-
     setIsLoading(true);
     try {
-      // 1. Zufälligen 4-stelligen Code generieren (z.B. "A7K9")
       const newRoomCode = Math.random()
         .toString(36)
         .substring(2, 6)
         .toUpperCase();
-
-      // 2. Den Raum in Firebase erstellen
       const roomRef = doc(db, "rooms", newRoomCode);
       await setDoc(roomRef, {
-        status: "lobby", // Spiel hat noch nicht begonnen
-        players: [{ name: playerName, isHost: true }], // Der Ersteller ist der Host
+        status: "lobby",
+        players: [{ name: playerName, isHost: true }],
         createdAt: new Date(),
       });
-
-      // 3. Spieler-Namen im Browser speichern (damit wir ihn im Raum noch wissen)
       localStorage.setItem("playerName", playerName);
-
-      // 4. Zum neuen Raum navigieren
       navigate(`/room/${newRoomCode}`);
     } catch (error) {
-      console.error("Fehler beim Erstellen des Raums:", error);
-      alert("Es gab ein Problem beim Erstellen des Raums.");
+      console.error("Fehler:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Funktion 2: Einem existierenden Raum beitreten
   const handleJoinRoom = () => {
     if (!playerName.trim()) return alert("Bitte gib einen Namen ein!");
     if (!roomCode.trim() || roomCode.length !== 4)
-      return alert("Bitte gib einen gültigen 4-stelligen Code ein!");
-
-    // Namen speichern und zum Raum navigieren (die Firebase-Logik fürs Beitreten machen wir im Room.tsx)
+      return alert("Bitte gib einen Code ein!");
     localStorage.setItem("playerName", playerName);
     navigate(`/room/${roomCode.toUpperCase()}`);
   };
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-bold text-slate-800">
-          Imposter Game
+    // Elegante Einflug-Animation für die helle Karte
+    <Card className="shadow-2xl border-slate-200 bg-white/90 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-700">
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-5xl font-black text-slate-800 tracking-tight">
+          Imposter
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-slate-500 text-md mt-2">
           Finde den Verräter unter deinen Freunden!
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-6">
-        {/* Name Eingabe */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">
-            Dein Name
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+            Dein Spielername
           </label>
           <Input
             placeholder="z.B. Spieler123"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             maxLength={15}
+            className="h-14 text-lg bg-slate-50 border-slate-200 focus-visible:ring-blue-500 transition-all"
           />
         </div>
 
-        <div className="border-t border-slate-200 pt-6 space-y-4">
-          {/* Raum erstellen */}
-          <Button
-            className="w-full"
-            onClick={handleCreateRoom}
-            disabled={isLoading}
-          >
-            {isLoading ? "Erstelle Raum..." : "Neues Spiel erstellen"}
-          </Button>
+        <div className="pt-4 border-t border-slate-100 space-y-6">
+          <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <label className="text-sm font-semibold text-slate-700 block text-center">
+              Hast du einen Einladungscode?
+            </label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="CODE"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                maxLength={4}
+                className="uppercase font-bold text-center tracking-widest text-xl h-14 w-full bg-white border-slate-300"
+              />
+              <Button
+                onClick={handleJoinRoom}
+                className="h-14 px-6 bg-blue-600 hover:bg-blue-700 text-white text-md font-bold transition-all hover:scale-[1.03] active:scale-95 shadow-md"
+              >
+                Beitreten
+              </Button>
+            </div>
+          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-slate-200" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-500">Oder</span>
+            <div className="relative flex justify-center text-xs uppercase font-bold tracking-widest">
+              <span className="bg-white px-3 text-slate-400">Oder</span>
             </div>
           </div>
 
-          {/* Raum beitreten */}
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Raum-Code (z.B. A7K9)"
-              value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              maxLength={4}
-              className="uppercase"
-            />
-            <Button variant="secondary" onClick={handleJoinRoom}>
-              Beitreten
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            className="w-full h-14 text-md font-semibold border-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all hover:scale-[1.02] active:scale-95"
+            onClick={handleCreateRoom}
+            disabled={isLoading}
+          >
+            {isLoading ? "Erstelle Raum..." : "Neuen Raum erstellen"}
+          </Button>
         </div>
       </CardContent>
     </Card>
