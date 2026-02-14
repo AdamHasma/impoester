@@ -59,8 +59,13 @@ export default function Room() {
   const [hasJoined, setHasJoined] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
 
+  // --- FIX 1: navigate() darf nicht mit "return" direkt im useEffect aufgerufen werden
   useEffect(() => {
-    if (!roomId || !playerName) return navigate("/");
+    if (!roomId || !playerName) {
+      navigate("/");
+      return;
+    }
+
     const roomRef = doc(db, "rooms", roomId);
 
     const joinRoom = async () => {
@@ -239,7 +244,6 @@ export default function Room() {
       : "";
   const isMyTurn = activePlayerName === playerName;
 
-  // Helles Karten-Styling mit weichem Einflug von unten
   const cardStyles =
     "w-full shadow-2xl border-slate-200 bg-white/95 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-8 duration-500";
 
@@ -259,7 +263,6 @@ export default function Room() {
         </CardHeader>
 
         <CardContent className="space-y-6 text-center">
-          {/* Rollen-Box mit Pop-In Animation */}
           <div
             className={`p-6 rounded-xl border-2 shadow-sm animate-in zoom-in-95 duration-700 delay-150 fill-mode-backwards ${
               amIImposter
@@ -303,7 +306,6 @@ export default function Room() {
           </div>
 
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-inner overflow-hidden">
-            {/* DER DRAMATISCHE TIMER */}
             <div className="mb-4 flex flex-col items-center border-b border-slate-200 pb-8 pt-4">
               <span className="text-xs text-slate-500 uppercase tracking-widest block mb-4">
                 Verbleibende Zeit
@@ -311,10 +313,10 @@ export default function Room() {
               <div
                 className={`text-6xl font-mono font-black transition-all duration-300 ${
                   timeLeft <= 5
-                    ? "text-red-600 scale-125 animate-bounce drop-shadow-md" // Eskalation: Springt, groß, rot
+                    ? "text-red-600 scale-125 animate-bounce drop-shadow-md"
                     : timeLeft <= 10
-                      ? "text-orange-500 scale-110 animate-pulse" // Warnung: Pulsiert, orange
-                      : "text-slate-800" // Normal
+                      ? "text-orange-500 scale-110 animate-pulse"
+                      : "text-slate-800"
                 }`}
               >
                 00:{timeLeft.toString().padStart(2, "0")}
@@ -505,12 +507,13 @@ export default function Room() {
           </h3>
           <ul className="space-y-2">
             {roomData.players.map((player, index) => (
+              // FIX 2: Aus fillMode wurde animationFillMode
               <li
                 key={index}
                 className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm animate-in slide-in-from-left-4 fade-in duration-300"
                 style={{
                   animationDelay: `${index * 100}ms`,
-                  fillMode: "backwards",
+                  animationFillMode: "backwards",
                 }}
               >
                 <div className="flex items-center gap-3">
